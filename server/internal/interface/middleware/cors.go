@@ -1,20 +1,24 @@
 package middleware
 
-import "net/http"
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
 
-func CORS(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		w.Header().Set("Access-Control-Allow-Methods", "GET,　POST, PUT, PATCH, DELETE, HEAD, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		w.Header().Set("Access-Control-Max-Age", "100")
+// CORSミドルウェア
+func CORS() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "http://localhost:3000") // 許可するオリジン
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization, X-Requested-With")
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Header("Access-Control-Max-Age", "100")
 
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(http.StatusOK)
 			return
 		}
 
-		next.ServeHTTP(w, r)
-	})
+		c.Next() // 次のハンドラーを呼び出す
+	}
 }

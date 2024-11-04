@@ -29,9 +29,20 @@ func main() {
 	userUseCase := usecase.NewUserUseCase(userRepository, oauthClient)
 	userHandler := handler.NewUserHandler(userUseCase, store)
 
+	tagRepository := dao.NewTagRepository(db)
+	tagUsecase := usecase.NewTagUsecase(tagRepository, userRepository)
+	tagHandler := handler.NewTagHandler(tagUsecase)
+
+	photoRepository := dao.NewPhotoRepository(db)
+	photousecase := usecase.NewPhotoUsecase(photoRepository)
+	photoHandler := handler.NewPhotoHandler(photousecase)
+
+	tagsPhotosUsecase := usecase.NewTagsPhotosUseCase(userRepository, tagRepository)
+	tagsPhotosHandler := handler.NewTagsPhotosHnadler(tagsPhotosUsecase)
+
 	fmt.Println("User handler success")
 
-	router := router.NewRouter(userHandler)
+	router := router.NewRouter(userHandler, tagHandler, photoHandler, tagsPhotosHandler, store)
 	fmt.Println("Router success")
 
 	log.Fatal(http.ListenAndServe(":8080", router))

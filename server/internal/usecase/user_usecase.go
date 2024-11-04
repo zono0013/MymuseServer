@@ -14,6 +14,7 @@ import (
 type UserUseCase interface {
 	HandleGoogleCallback(ctx context.Context, input input.GoogleAuthCallback) (*output.UserOutput, error)
 	GetAuthURL() string
+	GetAll(ctx context.Context) output.AllUserOutput
 }
 
 type userUseCase struct {
@@ -56,7 +57,7 @@ func (u *userUseCase) HandleGoogleCallback(ctx context.Context, input input.Goog
 	}
 
 	// ユーザーの検索または作成
-	user, err := u.userRepo.FindByEmail(ctx, googleUser.Email)
+	user, err := u.userRepo.FindByID(ctx, googleUser.ID)
 	if err != nil {
 
 		// 新規ユーザーの作成
@@ -83,12 +84,41 @@ func (u *userUseCase) HandleGoogleCallback(ctx context.Context, input input.Goog
 	}
 
 	return &output.UserOutput{
-		ID:    user.ID,
-		Email: user.Email,
-		Name:  user.Name,
+		ID:      user.ID,
+		Email:   user.Email,
+		Name:    user.Name,
+		Picture: user.Picture,
 	}, nil
 }
 
 func (u *userUseCase) GetAuthURL() string {
 	return u.oauthClient.GetAuthURL("state")
+}
+
+func (u *userUseCase) GetAll(ctx context.Context) output.AllUserOutput {
+	// userRepo から全ユーザーを取得
+	users, err := u.userRepo.GetAll(ctx)
+	if err != nil {
+		// エラー時の処理
+		return output.AllUserOutput{
+			Users: []output.UserOutput{}, // 空のユーザーリストを返す
+		}
+	}
+
+	// model.User を output.UserOutput に変換
+	var userOutputs []output.UserOutput
+	for _, user := range users {
+		userOutput := output.UserOutput{
+			ID:      user.ID,
+			Email:   user.Email,
+			Name:    user.Name,
+			Picture: user.Picture,
+		}
+		userOutputs = append(userOutputs, userOutput)
+	}
+
+	// 変換したユーザーリストを AllUserOutput にセットして返す
+	return output.AllUserOutput{
+		Users: userOutputs,
+	}
 }

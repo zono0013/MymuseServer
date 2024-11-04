@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/sessions"
 	"github.com/zono0013/MyMuseGolangAPI/internal/usecase"
 	"github.com/zono0013/MyMuseGolangAPI/internal/usecase/input"
@@ -21,31 +21,32 @@ func NewUserHandler(userUseCase usecase.UserUseCase, store *sessions.CookieStore
 	}
 }
 
-func (h *UserHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Handler")
+func (h *UserHandler) HandleGoogleLogin(c *gin.Context) {
 	url := h.userUseCase.GetAuthURL()
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
-func (h *UserHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
-	code := r.URL.Query().Get("code")
-	state := r.URL.Query().Get("state")
+func (h *UserHandler) HandleGoogleCallback(c *gin.Context) {
+	code := c.Query("code")
+	state := c.Query("state")
 
 	input := input.GoogleAuthCallback{
 		Code:  code,
 		State: state,
 	}
 
-	user, err := h.userUseCase.HandleGoogleCallback(r.Context(), input)
+	user, err := h.userUseCase.HandleGoogleCallback(c.Request.Context(), input)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	fmt.Println(user)
+
 	// セッションの取得
-	session, err := h.store.Get(r, "session-name")
+	session, err := h.store.Get(c.Request, "session-name")
 	if err != nil {
-		http.Error(w, "Session error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Session error"})
 		return
 	}
 
@@ -53,50 +54,66 @@ func (h *UserHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 	session.Values["user_id"] = user.ID
 	session.Values["email"] = user.Email
 	session.Values["name"] = user.Name
+	session.Values["picture"] = user.Picture // ユーザーの画像URLも保存
 
 	// セッションの設定を調整
 	session.Options = &sessions.Options{
 		Path:     "/",
-		MaxAge:   100 * 1,
+		MaxAge:   60 * 60 * 24, // セッションの有効期限（適宜調整）
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		Secure:   false, // HTTPSが有効な環境で使用
+		SameSite: http.SameSiteLaxMode,
 	}
 
-	if err := session.Save(r, w); err != nil {
-		http.Error(w, "Failed to save session", http.StatusInternalServerError)
+	fmt.Println("session")
+	fmt.Println(session)
+
+	if err := session.Save(c.Request, c.Writer); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save session"})
 		return
 	}
 
 	// フロントエンドのダッシュボードへリダイレクト
-	http.Redirect(w, r, "http://localhost:3000/dashboard", http.StatusFound)
+	c.Redirect(http.StatusFound, "http://localhost:3000/")
 }
 
 // 新しいエンドポイント: セッション検証
-func (h *UserHandler) CheckSession(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Request: $s", r)
-	fmt.Println("CheckSession")
-	session, err := h.store.Get(r, "session-name")
-	fmt.Println(session.Values["user_id"])
+func (h *UserHandler) CheckSession(c *gin.Context) {
+	fmt.Println("check session request")
+	fmt.Println(c.Request)
+	session, err := h.store.Get(c.Request, "session-name")
 	if err != nil {
-		http.Error(w, "Session error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Session error"})
 		return
 	}
+
+	fmt.Printf("session: %+v\\n", session)
 
 	if auth, ok := session.Values["user_id"].(string); !ok || auth == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "authenticated"})
+	// ユーザー情報をレスポンスとして返す
+	response := map[string]interface{}{
+		"user_id": session.Values["user_id"],
+		"email":   session.Values["email"],
+		"name":    session.Values["name"],
+		"picture": session.Values["picture"], // ユーザーの画像URLを含む
+		"status":  "authenticated",
+	}
+
+	fmt.Println(response)
+
+	c.JSON(http.StatusOK, response)
 }
 
-func (h *UserHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleLogout(c *gin.Context) {
+	fmt.Println("logoutHandler")
 	// セッションを取得
-	session, err := h.store.Get(r, "session-name")
+	session, err := h.store.Get(c.Request, "session-name")
 	if err != nil {
-		http.Error(w, "Session error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Session error"})
 		return
 	}
 
@@ -107,13 +124,22 @@ func (h *UserHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	session.Options.MaxAge = -1
 
 	// セッションを保存（これで削除が確定する）
-	if err := session.Save(r, w); err != nil {
-		http.Error(w, "Failed to clear session", http.StatusInternalServerError)
+	if err := session.Save(c.Request, c.Writer); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear session"})
 		return
 	}
 
-	fmt.Printf("logout: $s", session.Values)
+	fmt.Printf("logout: %v\n", session.Values) // フォーマットを修正
 
-	// ログインページまたは別のページにリダイレクト
-	http.Redirect(w, r, "http://localhost:3000/", http.StatusFound)
+}
+
+func (h *UserHandler) GetAll(c *gin.Context) {
+	// コンテキストを取得
+	ctx := c.Request.Context()
+
+	// UseCase を使って全ユーザー情報を取得
+	allUsersOutput := h.userUseCase.GetAll(ctx)
+
+	// レスポンスとしてユーザー情報を JSON 形式で返す
+	c.JSON(200, allUsersOutput)
 }

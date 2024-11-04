@@ -2,6 +2,7 @@ package oauth2
 
 import (
 	"context"
+	"fmt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"net/http"
@@ -26,6 +27,7 @@ func NewOAuth2Client(clientID, clientSecret, redirectURL string) *OAuth2Client {
 }
 
 func (c *OAuth2Client) GetAuthURL(state string) string {
+	fmt.Println("GetAuthURL")
 	return c.config.AuthCodeURL(state)
 }
 

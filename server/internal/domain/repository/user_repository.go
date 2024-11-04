@@ -6,7 +6,9 @@ import (
 )
 
 type UserRepository interface {
-	FindByEmail(ctx context.Context, email string) (*model.User, error)
+	FindByID(ctx context.Context, userID string) (*model.User, error)
 	Create(ctx context.Context, user *model.User) error
 	Update(ctx context.Context, user *model.User) error
+	GetTagsByUserID(ctx context.Context, userID string) ([]model.Tag, error)
+	GetAll(ctx context.Context) ([]model.User, error)
 }

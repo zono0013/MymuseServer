@@ -26,3 +26,6 @@ go.work.sum
 
 # .idea file
 *.idea
+
+# tmp
+server/tmp/
