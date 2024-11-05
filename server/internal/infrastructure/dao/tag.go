@@ -39,3 +39,10 @@ func (r tagRepository) GetPhotosByTagID(ctx context.Context, tagID uint) ([]mode
 	}
 	return photos, nil
 }
+
+func (r tagRepository) UpdateOrder(ctx context.Context, tag *model.Tag, id string) error {
+	return r.db.WithContext(ctx).
+		Model(&model.Tag{ID: tag.ID}). // モデル全体を指定
+		Where("id = ?", tag.ID).       // 特定のユーザーを指定
+		Updates(tag).Error
+}

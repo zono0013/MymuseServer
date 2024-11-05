@@ -31,3 +31,10 @@ func (r photoRepository) Delete(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func (r photoRepository) UpdateOrder(ctx context.Context, photo *model.Photo, id string) error {
+	return r.db.WithContext(ctx).
+		Model(&model.Photo{ID: photo.ID}). // モデル全体を指定
+		Where("id = ?", photo.ID).         // 特定のユーザーを指定
+		Updates(photo).Error
+}

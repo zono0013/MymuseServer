@@ -15,3 +15,10 @@ type UpdatePhotoInput struct {
 	Title         string `json:"title"`
 	DetailedTitle string `json:"detailed_title"`
 }
+
+type PhotoOrder struct {
+	ID    uint `json:"id"`
+	Order int  `json:"order"`
+}
+
+type PhotoOrderList []PhotoOrder

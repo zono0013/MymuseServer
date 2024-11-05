@@ -47,6 +47,8 @@ func NewRouter(
 		web.POST("/tag", tagHandler.Create)
 		web.PUT("/tag", tagHandler.Update)
 		web.DELETE("/tag/:tag_id", tagHandler.Delete)
+		web.PUT("/tag/order/:user_id", tagHandler.UpdateOrder)
+		web.PUT("/tag/:tag_id/photos/order", photoHandler.UpdateOrder)
 
 		web.GET("/photo")
 		web.POST("/photo", photoHandler.Create)

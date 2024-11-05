@@ -12,3 +12,10 @@ type UpdateTagInput struct {
 	UserID string
 	Order  int
 }
+
+type TagOrder struct {
+	ID    uint `json:"id"`
+	Order int  `json:"order"`
+}
+
+type TagOrderList []PhotoOrder

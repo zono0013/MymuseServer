@@ -4,17 +4,126 @@ import { useRouter } from 'next/navigation';
 import { usePhotoGallery } from '@/hooks/usePhotoGallery';
 import { useAuth } from '@/hooks/useAuth';
 import { TagCreateForm } from '@/components/tag/TagCreateForm';
-import { PhotoCreateForm} from '@/components/photo/PhotoCreateForm';
-import { PhotoDeleteForm } from '@/components/photo/PhotoDeleteForm';
-import { PhotoEdit } from "@/components/photo/PhotoUpdateForm";
-import {TagEditForm} from "@/components/tag/TagUpdateForm";
-import {TagDeleteForm} from "@/components/tag/TagDeleteForm";
+import {TagContainer} from "@/components/home/TagContainer";
+import {useEffect, useRef, useState} from "react";
+import Sortable from 'sortablejs';
 
+// 参照を保持するオブジェクトの型を定義
+interface PhotoContainerRefs {
+    [key: string]: HTMLDivElement | null;
+}
+
+interface TagContainerRefs {
+    [key: string]: HTMLDivElement | null;
+}
+
+interface SortableInstances {
+    [key: string]: Sortable | null;
+}
 
 export default function HomePage() {
     const router = useRouter();
     const { user, isLoading: authLoading, checkSession } = useAuth();
     const { data, isLoading: galleryLoading, error, mutate } = usePhotoGallery(user?.id || null);
+
+    // 編集モードの状態管理
+    const [editingTags, setEditingTags] = useState<{ [key: string]: boolean }>({});
+
+
+    // Sortableインスタンスの参照を保持
+    const sortableInstancesRef = useRef<SortableInstances>({});
+    const photoContainerRefs = useRef<PhotoContainerRefs>({});
+
+    const setPhotoContainerRef = (tagId: string) => (el: HTMLDivElement | null) => {
+        if (photoContainerRefs.current) {
+            photoContainerRefs.current[tagId] = el;
+        }
+    };
+
+
+    // 並び替えモードの切り替え
+    const toggleSortingMode = (userId: string) => {
+        setEditingTags(prev => {
+            const newState = { ...prev, [userId]: !prev[userId] };
+
+            if (newState[userId]) {
+                // 並び替えモードをONにする
+                const container = photoContainerRefs.current[userId];
+                if (container && !sortableInstancesRef.current[userId]) {
+                    sortableInstancesRef.current[userId] = new Sortable(container, {
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        chosenClass: 'sortable-chosen',
+                        dragClass: 'sortable-drag'
+                    });
+                }
+            } else {
+                // 並び替えモードをOFFにする
+                if (sortableInstancesRef.current[userId]) {
+                    sortableInstancesRef.current[userId]?.destroy();
+                    sortableInstancesRef.current[userId] = null;
+                }
+            }
+
+            return newState;
+        });
+    };
+
+    // 並び替えをキャンセル
+    const cancelSorting = (userId: string) => {
+        if (sortableInstancesRef.current[userId]) {
+            sortableInstancesRef.current[userId]?.destroy();
+            sortableInstancesRef.current[userId] = null;
+        }
+        setEditingTags(prev => ({ ...prev, [userId]: false }));
+        // データを再取得して並び順をリセット
+        mutate(userId);
+    };
+
+    // 並び替えを保存
+    const saveSorting = async (userId: string) => {
+        const container = photoContainerRefs.current[userId];
+        if (!container) return;
+
+        const photoElements = container.children;
+        const orderData = Array.from(photoElements).map((el, index) => ({
+            id: Number((el as HTMLElement).getAttribute('data-tag-id')),
+            order: index + 1
+        }));
+
+        try {
+            const response = await fetch(`http://localhost:8080/api/web/tag/order/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save order');
+            }
+
+            // 並び替えモードを終了
+            toggleSortingMode(userId);
+            // データを再取得
+            mutate(userId);
+        } catch (error) {
+            console.error('Error saving photo order:', error);
+            // エラー処理（必要に応じてユーザーに通知）
+        }
+    };
+
+    // コンポーネントのクリーンアップ
+    useEffect(() => {
+        return () => {
+            // すべてのSortableインスタンスを破棄
+            Object.values(sortableInstancesRef.current).forEach(instance => {
+                if (instance) instance.destroy();
+            });
+        };
+    }, []);
+
 
     if (authLoading) {
         return (
@@ -69,90 +178,52 @@ export default function HomePage() {
                     </p>
                 </div>
             </main>
-            <div className="row-start-4 border rounded-lg p-4 shadow bg-white overflow-y-auto " style={{ width: 'calc(100vw - 160px)', minHeight: 'calc(100vh - 240px)' }}>
+            <div className="row-start-4 border rounded-lg p-4 shadow bg-white overflow-y-auto "
+                 style={{width: 'calc(100vw - 160px)', minHeight: 'calc(100vh - 240px)'}}>
                 {data?.tags === null ? (
-                    <p className="text-gray-500">まだ部屋がありません。</p>
-                ) : ( data?.tags.map((tag) => (
-                        <div
-                            key={tag.ID}
-                            className="mb-8"
-                            style={{
-                                backgroundImage: 'url("/spring.svg")',
-                                backgroundPosition: 'center',
-                                backgroundSize: '1300px 650px', // 固定サイズ
-                                backgroundRepeat: 'no-repeat',
-                                width: '100%', // 必要に応じて親要素の幅を調整
-                                overflow: 'hidden', // はみ出た部分を隠す
-                            }}
-                        >
-                            <div
-                                style={{
-                                    padding: '10px',
-                                    display: 'flex',
-                                    gap: '20px',
-                                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                                    alignItems: 'center'
-                                }}
+                        <p className="text-gray-500">まだ部屋がありません。</p>
+                ) : (
+                    <div>
+                        {!editingTags[user.id] ? (
+                            <button
+                                onClick={() => toggleSortingMode(user.id)}
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                             >
-                                <div className="text-xl font-semibold">{tag.name}</div>
-                                <TagEditForm
-                                    tagId={tag.ID} currentName={tag.name}
-                                    onSuccess={() => mutate(user.id)}
-                                />
-
-                                <TagDeleteForm
-                                    tagId={tag.ID}
-                                    onDeleteSuccess={() => mutate(user.id)}
-                                    disabled={(tag.photos?.length ?? 0) !== 0}
-                                />
-
-                                <PhotoCreateForm
-                                    tagId={tag.ID}
-                                    existingPhotosCount={tag.photos?.length ?? 0}
-                                    onSuccess={() => mutate(user.id)}
-                                />
-                            </div>
-                            {tag.photos === null ? (
-                                <p className="text-gray-500">部屋の中に写真がありません。</p>
-                            ) : (
-                                <div className="flex overflow-x-auto gap-4"
-                                     style={{margin: '10px', padding: '0 10px 10px 10px',}}
+                                順番を変更
+                            </button>
+                        ) : (
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => saveSorting(user.id)}
+                                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
                                 >
-                                    {tag.photos.map((photo) => (
-                                        <div
-                                            key={photo.ID}
-                                            className="flex-shrink-0 w-1/4 border rounded-lg p-4 shadow hover:shadow-lg transition-shadow"
-                                            style={{backgroundColor: 'rgba(255, 255, 255, 0.8)', minWidth: '220px'}}
-                                        >
-                                            <h3 className="font-semibold text-lg mb-2">{photo.Title}</h3>
-                                            {photo.DetailedTitle && (
-                                                <p className="text-sm text-gray-600 mb-2">{photo.DetailedTitle}</p>
-                                            )}
-                                            <img src={photo.Content} alt="Photo" className="max-w-full h-auto"/>
-                                            <div style={{padding: '5px', display: 'flex', gap: '5px'}}>
-                                                <PhotoEdit
-                                                    photoId={photo.ID}
-                                                    currentTitle={photo.Title}
-                                                    currentDetailedTitle={photo.DetailedTitle}
-                                                    onSuccess={() => mutate(user.id)}
-                                                />
-                                                <PhotoDeleteForm
-                                                    photoId={photo.ID}
-                                                    onDeleteSuccess={() => mutate(user.id)}
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ))
-                )}
-                <TagCreateForm
-                    existingTagsCount={data?.tags?.length ?? 0}
-                    onSuccess={() => mutate(user.id)} // データを再取得
-                />
+                                    保存
+                                </button>
+                                <button
+                                    onClick={() => cancelSorting(user.id)}
+                                    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                                >
+                                    キャンセル
+                                </button>
+                            </div>
+                        )}
+                    <div ref={setPhotoContainerRef(user.id)}
+                    >
+                        {data?.tags.map((tag) => (
+                        <TagContainer
+                            key={tag.ID}
+                            data-tag-id={tag.ID}  // data-tag-id属性を追加
+                            tag={tag}
+                            onSortSuccess={() => mutate(user.id)}
+                            onDeleteSuccess={() => mutate(user.id)}
+                            onPhotoCreateSuccess={() => mutate(user.id)}
+                        />
+                        ))}
+                    </div>
+                    </div>
+                    )}
+                <TagCreateForm existingTagsCount={data?.tags?.length ?? 0} onSuccess={() => mutate(user.id)} />
+                </div>
             </div>
-        </div>
-    );
+        );
 }

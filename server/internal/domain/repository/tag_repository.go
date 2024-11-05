@@ -11,4 +11,5 @@ type TagRepository interface {
 	Update(ctx context.Context, tag *model.Tag) error
 	Delete(ctx context.Context, id string) error
 	GetPhotosByTagID(ctx context.Context, tagID uint) ([]model.Photo, error)
+	UpdateOrder(ctx context.Context, tag *model.Tag, id string) error
 }

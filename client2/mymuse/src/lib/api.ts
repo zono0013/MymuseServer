@@ -49,5 +49,9 @@ export const api = {
 
     updatePhoto: async (data: UpdatePhotoData): Promise<void> => {
         await axiosInstance.put(`/api/web/photo`, data)
+    },
+
+    updatePhotoOrder: async (tagID: string, updatedOrder: { id: number; order: number }[]): Promise<void> => {
+        await axiosInstance.put(`/api/web/tag/${tagID}/photos/order`, { order: updatedOrder });
     }
 };

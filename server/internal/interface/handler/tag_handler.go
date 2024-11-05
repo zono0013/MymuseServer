@@ -14,6 +14,7 @@ type ITagHandler interface {
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
+	UpdateOrder(ctx *gin.Context)
 }
 
 func NewTagHandler(tagUsecase usecase.ITagUsecase) ITagHandler {
@@ -65,4 +66,20 @@ func (h *tagHandler) Delete(ctx *gin.Context) {
 	}
 
 	ctx.JSON(204, "ok")
+}
+
+func (h *tagHandler) UpdateOrder(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+	request := request.UpdateTagOrderDTO{}
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	err := h.tagUsecase.UpdateOrder(ctx, request, userID)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(200, "ok")
 }

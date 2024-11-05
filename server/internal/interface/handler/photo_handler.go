@@ -15,6 +15,7 @@ type IPhotoHandler interface {
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
+	UpdateOrder(ctx *gin.Context)
 }
 
 func NewPhotoHandler(photoUsecase usecase.IPhotoUsecase) IPhotoHandler {
@@ -64,4 +65,23 @@ func (h *photo_handler) Delete(ctx *gin.Context) {
 	}
 
 	ctx.JSON(204, "ok")
+}
+
+func (h *photo_handler) UpdateOrder(ctx *gin.Context) {
+	id := ctx.Param("tag_id")
+
+	request := request.UpdatePhotoOrderDTO{}
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(401, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.photoHandler.UpdateOrder(ctx, request, id)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(200, "ok")
+
 }
