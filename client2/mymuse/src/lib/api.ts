@@ -3,7 +3,6 @@ import { Session } from '@/types/auth';
 import { PhotoGallery } from  '@/types/photoGallery';
 import {CreateTagData, UpdateTagData} from '@/types/tag'
 import {CreatePhotoData, UpdatePhotoData} from '@/types/photo'
-import {string} from "prop-types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 

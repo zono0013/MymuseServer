@@ -8,6 +8,7 @@ export interface Photo {
 export interface PhotoTag {
     ID: string
     name: string;
+    roomType: string;
     photos: Photo[];
 }
 

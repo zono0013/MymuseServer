@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { api } from '@/lib/api';
+import {RoomPreview} from "@/components/tag/RoomPreview";
 
 interface TagCreateFormProps {
     onSuccess?: () => void;
@@ -14,6 +15,7 @@ interface TagCreateFormProps {
 export function TagCreateForm({ onSuccess, existingTagsCount }: TagCreateFormProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [name, setName] = useState('');
+    const [roomType, setRoomType] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
     const { toast } = useToast();
@@ -26,6 +28,7 @@ export function TagCreateForm({ onSuccess, existingTagsCount }: TagCreateFormPro
             setIsSubmitting(true);
             await api.createTag({
                 name,
+                roomType,
                 user_id: user.id,
                 order: existingTagsCount + 1
             });
@@ -74,7 +77,31 @@ export function TagCreateForm({ onSuccess, existingTagsCount }: TagCreateFormPro
                             className="mt-1"
                         />
                     </div>
+                    <div>
+                        <label htmlFor="roomType" className="block text-sm font-medium text-gray-700">
+                            部屋の種類
+                        </label>
+                        <select
+                            id="roomType"
+                            value={roomType}
+                            onChange={(e) => setRoomType(e.target.value)}
+                            required
+                            className="mt-1 block w-full p-2 border border-gray-300 rounded"
+                        >
+                            <option value="">選択してください</option>
+                            <option value="廊下">廊下</option>
+                            <option value="通常部屋">通常部屋</option>
+                            <option value="春の部屋">春の部屋</option>
+                            <option value="夏の部屋">夏の部屋</option>
+                            <option value="秋の部屋">秋の部屋</option>
+                            <option value="冬の部屋">冬の部屋</option>
+                        </select>
+                    </div>
                     <div className="flex justify-end gap-2">
+                        <RoomPreview
+                            modelPath="Rooms/winter_room_center.glb"
+                        />
+
                         <Button
                             type="button"
                             variant="outline"

@@ -53,9 +53,10 @@ func (u *tagsPhotosUseCase) GetAll(ctx context.Context, userID string) (*output.
 
 		// タグの情報をTagsPhotosResponse形式に変換
 		tagResponse := output.TagsPhotosResponse{
-			ID:     tag.ID,
-			Name:   tag.Name,
-			Photos: photosResponse,
+			ID:       tag.ID,
+			RoomType: tag.RoomType,
+			Name:     tag.Name,
+			Photos:   photosResponse,
 		}
 
 		// レスポンスのタグリストに追加

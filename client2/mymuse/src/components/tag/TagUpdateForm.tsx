@@ -6,17 +6,18 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { PencilSquareIcon } from '@heroicons/react/24/solid'; // Heroiconsからインポート
 import { api } from '@/lib/api';
-import {UpdateTagData} from "@/types/tag";
 
 interface TagEditFormProps {
     tagId: string;  // 編集するタグのID
-    currentName: string;  // 現在のタグ名
+    currentName: string;// 現在のタグ名
+    currentRoomType: string;
     onSuccess?: () => void;  // 編集成功時のコールバック
 }
 
-export function TagEditForm({ tagId, currentName, onSuccess }: TagEditFormProps) {
+export function TagEditForm({ tagId, currentName, currentRoomType, onSuccess }: TagEditFormProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [name, setName] = useState(currentName);
+    const [roomType, setRoomType ] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
     const { toast } = useToast();
@@ -34,7 +35,8 @@ export function TagEditForm({ tagId, currentName, onSuccess }: TagEditFormProps)
             setIsSubmitting(true);
             await api.updateTag({
                 id: Number(tagId),
-                name: name
+                name: name,
+                roomType: roomType,
             });  // APIを呼び出してタグを更新
 
             toast({
@@ -80,6 +82,26 @@ export function TagEditForm({ tagId, currentName, onSuccess }: TagEditFormProps)
                             required
                             className="mt-1"
                         />
+                    </div>
+                    <div>
+                        <label htmlFor="roomType" className="block text-sm font-medium text-gray-700">
+                            部屋の種類
+                        </label>
+                        <select
+                            id="roomType"
+                            value={roomType}
+                            onChange={(e) => setRoomType(e.target.value)}
+                            required
+                            className="mt-1 block w-full p-2 border border-gray-300 rounded"
+                        >
+                            <option value="">選択してください</option>
+                            <option value="廊下">廊下</option>
+                            <option value="通常部屋">通常部屋</option>
+                            <option value="春の部屋">春の部屋</option>
+                            <option value="夏の部屋">夏の部屋</option>
+                            <option value="秋の部屋">秋の部屋</option>
+                            <option value="冬の部屋">冬の部屋</option>
+                        </select>
                     </div>
                     <div className="flex justify-end gap-2">
                         <Button

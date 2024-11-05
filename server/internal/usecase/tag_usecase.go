@@ -36,16 +36,17 @@ func (t *tagUsecase) Create(ctx context.Context, input input.CreateTagInput) err
 		return err
 	}
 
-	return t.tagRepo.Create(ctx, model.NewCreateTag(input.Name, input.UserID, input.Order))
+	return t.tagRepo.Create(ctx, model.NewCreateTag(input.Name, input.RoomType, input.UserID, input.Order))
 }
 
 func (t *tagUsecase) Update(ctx context.Context, input input.UpdateTagInput) error {
 	var tag *model.Tag
 	tag = &model.Tag{
-		ID:     input.ID,
-		Name:   input.Name,
-		UserID: input.UserID,
-		Order:  input.Order,
+		ID:       input.ID,
+		Name:     input.Name,
+		RoomType: input.RoomType,
+		UserID:   input.UserID,
+		Order:    input.Order,
 	}
 	return t.tagRepo.Update(ctx, tag)
 }

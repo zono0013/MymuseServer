@@ -126,7 +126,19 @@ export const TagContainer = ({ tag, onSortSuccess, onDeleteSuccess, onPhotoCreat
     return (
         <div key={`tag_${tag.ID}`} data-tag-id={tag.ID} className="mb-8"
              style={{
-                 backgroundImage: 'url("/spring.svg")',
+                 backgroundImage: `url("${
+                     tag.roomType === "春の部屋"
+                         ? "/spring.svg"
+                         : tag.roomType === "夏の部屋"
+                             ? "/summer.svg"
+                             : tag.roomType === "秋の部屋"
+                                 ? "/autumn.svg"
+                                 : tag.roomType === "冬の部屋"
+                                     ? "/winter.svg"
+                                     : tag.roomType === "廊下"
+                                         ? "/hallway.svg"
+                                         : "/default.svg" // 通常部屋など、他のタイプやデフォルト
+                 }")`,
                  backgroundPosition: 'center',
                  backgroundSize: '1300px 650px', // 固定サイズ
                  backgroundRepeat: 'no-repeat',
@@ -143,11 +155,13 @@ export const TagContainer = ({ tag, onSortSuccess, onDeleteSuccess, onPhotoCreat
             }}
             >
                 <div className="text-xl font-semibold">{tag.name}</div>
-                <TagEditForm tagId={tag.ID} currentName={tag.name} onSuccess={onDeleteSuccess}/>
+                <TagEditForm tagId={tag.ID} currentName={tag.name} currentRoomType={tag.roomType} onSuccess={onDeleteSuccess}/>
                 <TagDeleteForm tagId={tag.ID} onDeleteSuccess={onDeleteSuccess}
                                disabled={(tag.photos?.length ?? 0) !== 0}/>
                 <PhotoCreateForm tagId={tag.ID} existingPhotosCount={tag.photos?.length ?? 0}
-                                 onSuccess={onPhotoCreateSuccess}/>
+                                 onSuccess={onPhotoCreateSuccess}
+                                 disabled={(tag.photos?.length ?? 0) >= 9}
+                />
                 {!editingTags[tag.ID] ? (
                     <button
                         onClick={() => toggleSortingMode(tag.ID)}
