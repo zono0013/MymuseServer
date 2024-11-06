@@ -6,6 +6,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8
 
 export function GmailLoginButton() {
     const handleLogin = () => {
+        // ブラウザの cookie 設定を確認
+        if (!navigator.cookieEnabled) {
+            throw new Error('Cookies are disabled in your browser. Please enable cookies to continue.');
+        }
+
         // Goバックエンドのログインエンドポイントにリダイレクト
         window.location.href = `${API_BASE_URL}/auth/google/login`;
     };
