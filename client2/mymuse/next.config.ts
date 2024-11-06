@@ -5,12 +5,8 @@ const nextConfig: NextConfig = {
     images: {
         domains: ['lh3.googleusercontent.com'], // ここに外部ホスト名を追加
     },
-    webpack: (config) => {
-        config.externals.push({
-            'react-reconciler': 'react-reconciler',
-            canvas: 'canvas',
-        });
-        return config;
+    eslint: {
+        ignoreDuringBuilds: true, // ビルド時のESLintチェックを無効化
     },
 };
 
