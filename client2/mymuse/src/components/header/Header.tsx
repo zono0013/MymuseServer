@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import {useEffect, useState} from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import './header.css';
 import Image from 'next/image';
@@ -9,10 +9,23 @@ import { useRouter } from 'next/navigation';
 export function Header() {
     const router = useRouter();
     const { user, logout, checkSession } = useAuth();
+    const [isSessionChecked, setIsSessionChecked] = useState(false);
 
     useEffect(() => {
-        checkSession();
-    }, [checkSession]);
+        const checkUserSession = async () => {
+            try {
+                await checkSession(); // Try to check the session
+                setIsSessionChecked(true); // Mark as checked if no error occurs
+            } catch (error) {
+                console.error('Session check failed', error);
+                setIsSessionChecked(true); // Mark as checked even if there's an error, to stop retrying
+            }
+        };
+
+        if (!isSessionChecked) {
+            checkUserSession();
+        }
+    }, [checkSession, isSessionChecked]);
 
     const handleNavigation = () => {
         if (user) {

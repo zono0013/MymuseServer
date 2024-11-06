@@ -4,7 +4,7 @@ import { PhotoGallery } from  '@/types/photoGallery';
 import {CreateTagData, UpdateTagData} from '@/types/tag'
 import {CreatePhotoData, UpdatePhotoData} from '@/types/photo'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const axiosInstance = axios.create({
     baseURL: API_BASE_URL,
