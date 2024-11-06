@@ -43,18 +43,7 @@ export function Header() {
                 </h1>
                 {user ? (
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            {user.photoUrl && (
-                                <Image
-                                    src={user.photoUrl}
-                                    alt="Profile"
-                                    width={32}
-                                    height={32}
-                                    className="rounded-full"
-                                />
-                            )}
-                            <span>{user.name}</span>
-                        </div>
+                        ログイン済み
                     </div>
                 ) : (
                     <button
