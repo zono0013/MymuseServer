@@ -25,6 +25,7 @@ export function TagEditForm({ tagId, currentName, currentRoomType, onSuccess }: 
     // ダイアログが開かれたときに、タグ名を初期化
     useEffect(() => {
         setName(currentName);
+        setRoomType(currentRoomType);
     }, [currentName, isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {

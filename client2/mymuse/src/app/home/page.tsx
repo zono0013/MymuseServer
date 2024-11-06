@@ -13,16 +13,11 @@ interface PhotoContainerRefs {
     [key: string]: HTMLDivElement | null;
 }
 
-interface TagContainerRefs {
-    [key: string]: HTMLDivElement | null;
-}
-
 interface SortableInstances {
     [key: string]: Sortable | null;
 }
 
 export default function HomePage() {
-    const router = useRouter();
     const { user, isLoading: authLoading, checkSession } = useAuth();
     const { data, isLoading: galleryLoading, error, mutate } = usePhotoGallery(user?.id || null);
 

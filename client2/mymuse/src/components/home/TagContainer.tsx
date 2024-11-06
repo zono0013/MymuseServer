@@ -24,9 +24,6 @@ interface SortableInstances {
 
 export const TagContainer = ({ tag, onSortSuccess, onDeleteSuccess, onPhotoCreateSuccess }: TagContainerInterface) => {
 
-    // const sortableInstanceRef = useRef(null);
-    // const photoContainerRef = useRef(null);
-
     // 編集モードの状態管理
     const [editingTags, setEditingTags] = useState<{ [key: string]: boolean }>({});
 

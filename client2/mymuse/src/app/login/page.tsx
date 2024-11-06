@@ -1,4 +1,4 @@
-import { LoginButton } from '@/components/LoginButton';
+import { GmailLoginButton } from '@/components/login/GmailLoginButton';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
@@ -25,9 +25,12 @@ export default async function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center">
-            <div className="p-8 bg-white rounded-lg shadow-md">
+            <div className="p-8 bg-white rounded-lg shadow-md" style={{width: '75vw', height: '50vh'}}>
                 <h1 className="text-2xl font-bold text-center mb-6">ログイン</h1>
-                <LoginButton />
+                <div>
+
+                    <GmailLoginButton />
+                </div>
             </div>
         </div>
     );

@@ -12,21 +12,22 @@ interface PhotoCreateFormProps {
     tagId: string;
     existingPhotosCount: number;
     onSuccess?: () => void;
+    disabled?: boolean
 }
 
 // S3クライアントを初期化
 const s3Client = new S3Client({
-    region: process.env.REGION || "",
+    region: process.env.NEXT_PUBLIC_REGION!,
     credentials: {
-        accessKeyId: process.env.ACCESS_KEY_ID! || "",
-        secretAccessKey: process.env.SECRET_ACCESS_KEY! || "",
+        accessKeyId: process.env.NEXT_PUBLIC_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.NEXT_PUBLIC_SECRET_ACCESS_KEY!,
     },
 });
 
 async function uploadToS3(file: File): Promise<string | null> {
     const fileName = `${Date.now()}-${file.name}`;
     const params = {
-        Bucket: process.env.S3_BUCKET_NAME! || "",
+        Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
         Key: fileName,
         ContentType: file.type,
         Body: file,
@@ -36,14 +37,14 @@ async function uploadToS3(file: File): Promise<string | null> {
         const command = new PutObjectCommand(params);
         const data = await s3Client.send(command);
         console.log("画像アップロード成功:", data);
-        return `https://${params.Bucket}.s3.${process.env.NEXT_PUBLIC_REGION || ""}.amazonaws.com/${fileName}`;
+        return `https://${params.Bucket}.s3.${process.env.NEXT_PUBLIC_REGION}.amazonaws.com/${fileName}`;
     } catch (error) {
         console.error("画像アップロードエラー:", error);
         return null;
     }
 }
 
-export function PhotoCreateForm({ tagId, existingPhotosCount, onSuccess }: PhotoCreateFormProps) {
+export function PhotoCreateForm({ tagId, existingPhotosCount, onSuccess, disabled }: PhotoCreateFormProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [title, setTitle] = useState('');
     const [detailedTitle, setDetailedTitle] = useState('');
@@ -128,7 +129,7 @@ export function PhotoCreateForm({ tagId, existingPhotosCount, onSuccess }: Photo
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className="flex items-center">
+                <Button variant="outline" className="flex items-center" disabled={disabled}>
                     写真を追加
                 </Button>
             </DialogTrigger>

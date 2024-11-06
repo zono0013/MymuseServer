@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { api } from '@/lib/api';
-import {RoomPreview} from "@/components/tag/RoomPreview";
 
 interface TagCreateFormProps {
     onSuccess?: () => void;
@@ -98,10 +97,6 @@ export function TagCreateForm({ onSuccess, existingTagsCount }: TagCreateFormPro
                         </select>
                     </div>
                     <div className="flex justify-end gap-2">
-                        <RoomPreview
-                            modelPath="Rooms/winter_room_center.glb"
-                        />
-
                         <Button
                             type="button"
                             variant="outline"
