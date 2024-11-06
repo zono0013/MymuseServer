@@ -88,7 +88,7 @@ export const TagContainer = ({ tag, onSortSuccess, onDeleteSuccess, onPhotoCreat
         }));
 
         try {
-            const response = await fetch(`http://localhost:8080/api/web/tag/${tagId}/photos/order`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/web/tag/${tagId}/photos/order`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

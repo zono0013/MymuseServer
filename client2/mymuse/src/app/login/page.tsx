@@ -1,35 +1,18 @@
 import { GmailLoginButton } from '@/components/login/GmailLoginButton';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import {EmailLoginButton} from "@/components/login/EmailLoginButton";
 
 export default async function LoginPage() {
     // サーバーサイドでセッションチェック
-    try {
-        const headersList = await headers();
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/check-session`, {
-            headers: {
-                Cookie: headersList.get('cookie') || '',
-            },
-        });
-
-        if (response.ok) {
-            const session = await response.json();
-            if (session.isLoggedIn) {
-                redirect('/home');
-            }
-        }
-    } catch (error) {
-        // エラーハンドリング
-        console.error('Session check failed:', error);
-    }
 
     return (
         <div className="min-h-screen flex items-center justify-center">
             <div className="p-8 bg-white rounded-lg shadow-md" style={{width: '75vw', height: '50vh'}}>
                 <h1 className="text-2xl font-bold text-center mb-6">ログイン</h1>
                 <div>
-
-                    <GmailLoginButton />
+                    <EmailLoginButton/>
+                    {/*<GmailLoginButton />*/}
                 </div>
             </div>
         </div>

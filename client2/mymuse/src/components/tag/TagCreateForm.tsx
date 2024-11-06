@@ -28,7 +28,7 @@ export function TagCreateForm({ onSuccess, existingTagsCount }: TagCreateFormPro
             await api.createTag({
                 name,
                 roomType,
-                user_id: user.id,
+                user_id: user.ID,
                 order: existingTagsCount + 1
             });
 

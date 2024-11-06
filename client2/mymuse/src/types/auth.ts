@@ -1,8 +1,8 @@
 export interface User {
-    id: string;
-    name: string;
-    email: string;
-    photoUrl?: string;
+    ID: string;
+    Email: string;
+    Name: string;
+    Picture?: string;
 }
 
 export interface Session {

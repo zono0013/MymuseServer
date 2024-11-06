@@ -18,8 +18,17 @@ interface SortableInstances {
 }
 
 export default function HomePage() {
-    const { user, isLoading: authLoading, checkSession } = useAuth();
-    const { data, isLoading: galleryLoading, error, mutate } = usePhotoGallery(user?.id || null);
+    const router = useRouter();
+    const { user, setUser} = useAuth();
+    const { data, isLoading: galleryLoading, error, mutate } = usePhotoGallery(user?.ID || "");
+
+    useEffect(() => {
+        if (!user) {
+            router.push('/login');
+            console.log("userが見つかりません。ログインしてください")
+        }
+        setUser(user)
+    }, [router]);
 
     // 編集モードの状態管理
     const [editingTags, setEditingTags] = useState<{ [key: string]: boolean }>({});
@@ -87,7 +96,7 @@ export default function HomePage() {
         }));
 
         try {
-            const response = await fetch(`http://localhost:8080/api/web/tag/order/${userId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/web/tag/order/${userId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -119,14 +128,6 @@ export default function HomePage() {
         };
     }, []);
 
-
-    if (authLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-lg">Loading...</div>
-            </div>
-        );
-    }
 
     if (!user) {
         return (
@@ -179,9 +180,9 @@ export default function HomePage() {
                         <p className="text-gray-500">まだ部屋がありません。</p>
                 ) : (
                     <div>
-                        {!editingTags[user.id] ? (
+                        {!editingTags[user.ID] ? (
                             <button
-                                onClick={() => toggleSortingMode(user.id)}
+                                onClick={() => toggleSortingMode(user.ID)}
                                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                             >
                                 順番を変更
@@ -189,35 +190,35 @@ export default function HomePage() {
                         ) : (
                             <div className="flex gap-2">
                                 <button
-                                    onClick={() => saveSorting(user.id)}
+                                    onClick={() => saveSorting(user.ID)}
                                     className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
                                 >
                                     保存
                                 </button>
                                 <button
-                                    onClick={() => cancelSorting(user.id)}
+                                    onClick={() => cancelSorting(user.ID)}
                                     className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
                                 >
                                     キャンセル
                                 </button>
                             </div>
                         )}
-                    <div ref={setPhotoContainerRef(user.id)}
+                    <div ref={setPhotoContainerRef(user.ID)}
                     >
                         {data?.tags.map((tag) => (
                         <TagContainer
                             key={tag.ID}
                             data-tag-id={tag.ID}  // data-tag-id属性を追加
                             tag={tag}
-                            onSortSuccess={() => mutate(user.id)}
-                            onDeleteSuccess={() => mutate(user.id)}
-                            onPhotoCreateSuccess={() => mutate(user.id)}
+                            onSortSuccess={() => mutate(user.ID)}
+                            onDeleteSuccess={() => mutate(user.ID)}
+                            onPhotoCreateSuccess={() => mutate(user.ID)}
                         />
                         ))}
                     </div>
                     </div>
                     )}
-                <TagCreateForm existingTagsCount={data?.tags?.length ?? 0} onSuccess={() => mutate(user.id)} />
+                <TagCreateForm existingTagsCount={data?.tags?.length ?? 0} onSuccess={() => mutate(user.ID)} />
                 </div>
             </div>
         );
